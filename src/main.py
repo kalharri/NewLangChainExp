@@ -36,11 +36,12 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 
 # set up for speech output
 engine = OpenAIEngine()
-stream = TextToAudioStream(engine, log_characters = True, on_audio_stream_stop = on_playback_finished)
+engine.set_voice("shimmer")
+stream = TextToAudioStream(engine, on_audio_stream_stop = on_playback_finished)         # log_characters = True, 
 
 def llm_response_generator(messages):
     for string_chunk in chain.stream({"input": "how can LangSmith help with testing?"}):
-        # print(string_chunk, end="")
+        print(string_chunk, end="")
         yield string_chunk
 
 # initialize the bot's conversation memory
@@ -53,7 +54,7 @@ messages = [
 prompt = ChatPromptTemplate.from_messages(messages)
 
 # set up the chat model, the output parser to pretty up its responses, and construct the chain
-llm = ChatOpenAI(temperature=0.9)
+llm = ChatOpenAI(temperature=0.9, streaming = True)
 output_parser = StrOutputParser()
 chain = prompt | llm | output_parser
 
