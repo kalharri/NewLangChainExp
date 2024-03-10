@@ -147,7 +147,7 @@ class Actor:
 
         # execute the LLM on the updated message history
         if not self.__convo_bot:
-            raise Exception('no conversation bot found!')
+            raise Exception('no language model found!')
 
         self.__convo_bot.temperature = self._temperature
         result = self.__convo_bot(self._message_history)
