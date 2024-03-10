@@ -19,16 +19,36 @@ class Actor:
     # Class variable setters
     @classmethod
     def set_convo_bot(cls, bot: ChatOpenAI):
+        """
+        Set the conversation bot for the class.
+
+        Args:
+            cls: The class itself.
+            bot (ChatOpenAI): The conversation bot to set.
+
+        Returns:
+            None
+        """
         cls.__convo_bot = bot
 
     @classmethod
     def set_system_prefix(cls, instructions: str):
+        """
+        Set the system prefix that defines all actor behaviors in conversations.
+        
+        Args:
+            cls: The class object.
+            instructions (str): The instructions for the system prefix.
+        
+        Returns:
+            None
+        """
         cls.__system_prefix = instructions
 
     @classmethod
     def load_system_prefix(cls, filename: str) -> str:
         """
-        Load the System Message prefix text from an RTF file.
+        Load the System Message prefix text from an txt file.
 
         Args:
             filename (str): The full path of the file to load the System Message prefix from.
@@ -47,12 +67,11 @@ class Actor:
         Load a text-based persona file and create a corresponding Actor object
 
         Args:
-            filename (str): The full path of the file to load the persona from.
+            file_path (str): The full path of the file to load the persona from.
 
         Returns:
             Actor: The Actor object based on the loaded persona.
         """
-
         with open(file_path, 'r') as file:
             persona: str = file.read()
 
@@ -86,8 +105,8 @@ class Actor:
             None
         """
         # define instance variables to model an individual Actor
-        self.__first_name: str = first_name
-        self.__last_name: str = last_name
+        self._first_name: str = first_name
+        self._last_name: str = last_name
         self._role: str = role
         self._persona: str = persona
         self._temperature: float = temperature
@@ -117,16 +136,14 @@ class Actor:
             response = maggie("What's your name?")
 
         Args:
-            message (str): The user message to be passed to the chatbot.
+            message (str): The user message to be passed to the chatbot. If None, the last "heard" message will process
 
         Returns:
             str: The chatbot's response to the user message.
         """
-        if not message:
-            return ''
-
-        # append the User message to the conversation
-        self._message_history.append(HumanMessage(content = message))
+        if message:
+            # append the user's message to the local conversation memory
+            self._message_history.append(HumanMessage(content = message))
 
         # execute the LLM on the updated message history
         if not self.__convo_bot:
@@ -145,6 +162,7 @@ class Actor:
         Concatenates {message} spoken by {name} into message history
         """
         self._message_history.append(f"{name}: {message}")           
+
 
     # Getters & setters
 
@@ -196,34 +214,18 @@ class Actor:
     @property
     def file_path(self) -> str:
         return self._file_path
-
-    @property
-    def suggested_filename(self) -> str:
-        """
-        Return a suggested filename for Actor object serialization, based on the Actor's name.
-
-        :return: A string representing the suggested filename.
-        :rtype: str
-        """
-        return f'{self.name}.act'
-    
+   
     @property
     def system_message(self) -> SystemMessage:
+        """
+        Property function to get the system message.
+        Returns:
+            SystemMessage: The system message object with the prefix and persona instructions.
+        """
         return SystemMessage(
             content = self.__system_prefix + '\n\n' + self.persona
         )
     
-    # Get the Actor's last response 
-    @property
-    def last_response(self) ->str:
-        """
-        Returns the Actor's last response from the message_history list.
-
-        :return: A string representing the content of the last response.
-        :rtype: str
-        """
-        return self._message_history[-1].content
-
 
     # Get the Actor's most recent prompt input 
     @property
@@ -238,3 +240,5 @@ class Actor:
             return ''
         
         return self._message_history[-2].content
+
+
