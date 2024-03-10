@@ -11,12 +11,22 @@ from Actor import Actor
 
 class Conversation:
 
-    def __init__(self, topic: str = 'Speak about whatever you like.', rounds: int = 6) -> None:
+    def __init__(self, rounds: int = 6) -> None:
+        """
+        Initializes the workshop or meeting with the specified number of rounds.
 
-        # define instance variables
-        self._stakeholders: list[Actor] = []        # all stakeholders who'll participate in the workshop or meeting
-        self._topic: str = topic                    # the topic to discuss
-        self._rounds: int = rounds                  # how many rounds of conversation at max
+        Args:
+            rounds (int): The number of rounds of conversation at max. Defaults to 6.
+
+        Returns:
+            None
+        """
+        # all stakeholders (Actors) who'll participate in the workshop or meeting
+        self._stakeholders: list[Actor] = []
+        # The current topic of the conversation        
+        self._topic: str = 'Discuss whatever you like.'
+        # how many rounds of conversation at max
+        self._rounds: int = rounds
         self._current_round: int = 0
 
 
@@ -50,7 +60,7 @@ class Conversation:
             # get this actors response
             response = actor.member(prompt)
             # let others in the meeting "hear" about it
-            self.broadcast(response)
+            self.broadcast_to_others(response, actor)
 
 
     # add a bot to the conversation
@@ -67,7 +77,7 @@ class Conversation:
         self._stakeholders.append(new_member)
 
 
-    def broadcast(self, message: str) -> None:
+    def broadcast_to_others(self, speaker: Actor, message: str) -> None:
         """
         Broadcasts a message to all stakeholders in the conversation.
 
@@ -78,7 +88,8 @@ class Conversation:
             None
         """
         for member in self._stakeholders:
-            member.hear(message)
+            if member != speaker:
+                member.hear(message)
 
 
     @property
