@@ -64,7 +64,15 @@ class Conversation:
 
 
     def conduct_round(self, topic: str):
-
+        """
+        Conducts a round of communication among stakeholders.
+        
+        Args:
+            topic (str): The topic of discussion for the round.
+        
+        Returns:
+            None
+        """
         # Copy the list to avoid modifying the original list
         remaining_actors = self._stakeholders.copy()
         # Shuffle the list to ensure random order
