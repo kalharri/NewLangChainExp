@@ -83,7 +83,7 @@ class Conversation:
             # Remove the last actor from the list
             actor: Actor = remaining_actors.pop()
             # get this actors response
-            response: str = actor()
+            response: str = actor.invoke()
 
             if '*Done*' in response:
                 print (f"**{actor.first_name}**: done\n\n")

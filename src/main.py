@@ -21,8 +21,7 @@ import random
 
 # langchain
 from langchain_openai import ChatOpenAI
-# from langchain_openai import ChatOpenAI
-# from langchain.agents.openai_assistant import OpenAIAssistantRunnable
+from langchain.agents.openai_assistant import OpenAIAssistantRunnable
 # from langchain.agents import AgentExecutor
 
 # ours

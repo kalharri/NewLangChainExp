@@ -12,7 +12,8 @@
 import os
 
 # from langchain.llms import OpenAI
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
+# from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.prompts import MessagesPlaceholder
 from langchain.schema import (SystemMessage, HumanMessage, AIMessage)
@@ -95,7 +96,6 @@ class Actor:
  
         # init the bot's conversation memory & give it it's instructions via a system message.
         self._message_history: list = []
-#        self._message_history.append(self.system_message)
 
         self._behavior: str = None
         self._company: str = None
@@ -112,12 +112,12 @@ class Actor:
         return str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' + str(self.__dict__[item]) for item in self.__dict__))
     
 
-    def __call__(self, message: str = None) -> str:
+    def invoke(self, message: str = None) -> str:
         """
         Calls the cached chat model with a user message and returns the chatbot's response.
         Allows constructions like:
             maggie = Actor(first_name = "Maggie", temperature=1.6)
-            response = maggie("What's your name?")
+            response = maggie.invoke("What's your name?")
 
         Args:
             message (str): The user message to be passed to the chatbot. If None, the last "heard" message will process
@@ -138,7 +138,7 @@ class Actor:
 
         # invoke the model
         self.__convo_bot.temperature = self._temperature
-        response = self.__convo_bot(self._message_history)
+        response: str = self.__convo_bot.invoke(self._message_history)
 
         if response and (not ('*Pass*' in response.content)):
             # append the LLM's response to the local conversation memory
