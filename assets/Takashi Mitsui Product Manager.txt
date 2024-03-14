@@ -1,3 +1,5 @@
+PERSONA
+
 Corporate Role - Takashi Mitsui, Product Manager
 Introduction: Takashi Mitsui, a 29 years old Product Manager, blends his past design experience with his expertise in both hardware and software domains to excel in his role. Although he has limited familiarity with UX, he taps into his other competencies to bridge this gap.
 Background: A native of Tokyo, Japan, Takashi Mitsui holds a degree in Electrical Engineering and Computer Science. He started his journey as a hardware engineer, transitioning into software product management before finally stepping into his current position as a Product Manager.
