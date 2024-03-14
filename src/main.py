@@ -1,6 +1,8 @@
 
 # Before Publishing
     # pip freeze > requirements.txt
+# virtual environment
+    # source langchain-env/bin/activate
 
 # Entry point for the application
 # Bob Howard
