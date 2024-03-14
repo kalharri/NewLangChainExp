@@ -2,8 +2,6 @@
 # Before Publishing
     # pip freeze > requirements.txt
 
-    # pip install --user ffmpeg-python
-
 # Entry point for the application
 # Bob Howard
 # kalharri@gmail.com
