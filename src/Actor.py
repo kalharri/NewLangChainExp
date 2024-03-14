@@ -1,5 +1,13 @@
 
-# Actor class models a corporatecharacter, suitable for design thinking sessions or other simulated workshops or meetings
+# The Actor class models a corporate character, suitable for design thinking sessions or other 
+# types of conversations in simulated workshops or meetings.
+# Bob Howard
+# kalharri@gmail.com
+
+# Notes
+
+# 1/ Choose and substitute appropriate Langchain agent for the Actor's LLM rather than the default ChatOpenAI model.
+
 
 import os
 
@@ -13,8 +21,8 @@ from langchain.schema import (SystemMessage, HumanMessage, AIMessage)
 class Actor:
 
     # Class variables
-    __convo_bot: ChatOpenAI = None   # app-provided LLM instance to conduct conversations with the personified Actor.
-    __system_prefix: str = None      # System Message prefix text from an RTF file. Defines how any Actor behaves in a conversation.
+    __convo_bot: ChatOpenAI = None          # app-provided LLM instance to conduct conversations with the personified Actor.
+
 
     # Class variable setters
     @classmethod
@@ -30,34 +38,6 @@ class Actor:
             None
         """
         cls.__convo_bot = bot
-
-    @classmethod
-    def set_system_prefix(cls, instructions: str):
-        """
-        Set the system prefix that defines all actor behaviors in conversations.
-        
-        Args:
-            cls: The class object.
-            instructions (str): The instructions for the system prefix.
-        
-        Returns:
-            None
-        """
-        cls.__system_prefix = instructions
-
-    @classmethod
-    def load_system_prefix(cls, filename: str) -> str:
-        """
-        Load the System Message prefix text from an txt file.
-
-        Args:
-            filename (str): The full path of the file to load the System Message prefix from.
-
-        Returns:
-            str: The System Message prefix text.
-        """
-        with open(filename, 'r') as file:
-            return file.read()
 
 
     @classmethod
@@ -86,7 +66,7 @@ class Actor:
             # Create the Actor instance
             instance: Actor = Actor(persona = persona, first_name = first_name, last_name = last_name, role = role)
 
-            print(f"loaded actor's persona from file: {file_path}")
+            print(f"loaded actor's persona from file: {file_path}\n")
 
             return instance
 
@@ -104,18 +84,22 @@ class Actor:
         Returns:
             None
         """
+
         # define instance variables to model an individual Actor
         self._first_name: str = first_name
         self._last_name: str = last_name
         self._role: str = role
         self._persona: str = persona
         self._temperature: float = temperature
+        self._topic: str = 'Discuss anything at all.' # *** move to Conversation class ***
  
         # init the bot's conversation memory & give it it's instructions via a system message.
         self._message_history: list = []
-        self._message_history.append(self.system_message)
- 
+#        self._message_history.append(self.system_message)
 
+        self._behavior: str = None
+        self._company: str = None
+ 
 
     # override the dunder method to format an instance of this class as a string
     def __str__(self):
@@ -128,11 +112,11 @@ class Actor:
         return str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' + str(self.__dict__[item]) for item in self.__dict__))
     
 
-    def __call__(self, message: str) -> str:
+    def __call__(self, message: str = None) -> str:
         """
-        Calls the cached chatbot with a user message and returns the chatbot's response.
+        Calls the cached chat model with a user message and returns the chatbot's response.
         Allows constructions like:
-            maggie = Actor("Maggie", temperature=1.6, synopsis)
+            maggie = Actor(first_name = "Maggie", temperature=1.6)
             response = maggie("What's your name?")
 
         Args:
@@ -144,25 +128,57 @@ class Actor:
         if message:
             # append the user's message to the local conversation memory
             self._message_history.append(HumanMessage(content = message))
+        else:
+            # use the last message in the local conversation memory as the prompt
+            message = self.last_response
 
-        # execute the LLM on the updated message history
+        # execute the LLM on the local message history
         if not self.__convo_bot:
             raise Exception('no language model found!')
 
+        # invoke the model
         self.__convo_bot.temperature = self._temperature
-        result = self.__convo_bot(self._message_history)
+        response = self.__convo_bot(self._message_history)
 
-        # append the LLM's response to the local conversation memory
-        self._message_history.append(AIMessage(content = result.content))
+        if response and (not ('*Pass*' in response.content)):
+            # append the LLM's response to the local conversation memory
+            self._message_history.append(HumanMessage(content = response.content)) # *** chg to HumanMessage + look for other cases
+            return response.content
+        else:
+            return self.first_name + ': *Pass*'
 
-        return result.content
-
-    def hear(self, name: str, message: str) -> None:
+    def create_system_message(self) -> None:
         """
-        Concatenates {message} spoken by {name} into message history
-        """
-        self._message_history.append(f"{name}: {message}")           
+        Creates the system message based on the Actor's persona.
 
+        Returns:
+            None
+        """
+        self._message_history.append(self.system_message)
+
+    def hear(self, message: str) -> None:
+        """
+        Simulates "hearing" a message from another Actor
+        
+        Args:
+            message (str): The message content to be recorded.
+
+        Returns:
+            None
+        """        
+        self._message_history.append(HumanMessage(content = message))      # *** should this be a HumanMessage?
+    
+
+    @property
+    def topic(self) -> str:
+        return self._topic
+    
+    @topic.setter
+    def topic(self, new_topic: str) -> None:
+        if new_topic:
+            self._topic = new_topic
+            self._message_history.append(HumanMessage(content = new_topic))
+        
 
     # Getters & setters
 
@@ -195,13 +211,29 @@ class Actor:
         self._role = value
 
     @property
+    def behavior(self) -> str:
+        return self._behavior
+
+    @behavior.setter
+    def behavior(self, value: str) -> None:
+        self._behavior = value
+    
+    @property
+    def company(self) -> str:
+        return self._company
+
+    @company.setter
+    def company(self, value: str) -> None:
+        self._company = value
+    
+    @property
     def persona(self) -> str:
         return self._persona
 
     @persona.setter
     def persona(self, value: str) -> None:
         self._persona = value
-
+    
     @property
     def temperature(self) -> float:
         return self._temperature
@@ -209,21 +241,16 @@ class Actor:
     @temperature.setter
     def temperature(self, value: float) -> None:
         self._temperature = value
-
     
-    @property
-    def file_path(self) -> str:
-        return self._file_path
-   
     @property
     def system_message(self) -> SystemMessage:
         """
         Property function to get the system message.
         Returns:
-            SystemMessage: The system message object with the prefix and persona instructions.
+            SystemMessage: The system message object with the Instructions, Company and persona.
         """
         return SystemMessage(
-            content = self.__system_prefix + '\n\n' + self.persona
+            content = self.behavior + '\n\n' + self.company + '\n\n' + self.persona
         )
     
 
@@ -241,4 +268,14 @@ class Actor:
         
         return self._message_history[-2].content
 
+
+    @property
+    def last_response(self) ->str:
+        """
+        Returns the Actor's last response from the messages context.
+
+        Returns:
+            str: The content of the last message in memory.
+        """
+        return self._message_history[-1].content
 
