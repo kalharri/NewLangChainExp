@@ -24,20 +24,25 @@ from langchain_openai import ChatOpenAI
 from langchain.agents.openai_assistant import OpenAIAssistantRunnable
 # from langchain.agents import AgentExecutor
 
-# ours
+# anvil
+import anvil.server
+
+# local classes
 from Actor import Actor
 from Conversation import Conversation
 
 
-# declare required API keys
+# set required API keys
 load_dotenv()
 openai_api_key = os.getenv('OPENAI_API_KEY')
+anvil_uplink_key = os.getenv('ANVIL_UPLINK_KEY')
+# anvil.server.connect(anvil_uplink_key)
 
 # Set up Actor class' required LLM instance for generating chatbot responses
-Actor.set_convo_bot(ChatOpenAI(model = 'gpt-3.5-turbo', temperature = random.uniform(0.8, 1.2)))
+Actor.set_convo_bot(ChatOpenAI(model = 'gpt-4o', temperature = random.uniform(0.8, 1.2)))
 
 # create a meeting
-meeting = Conversation(rounds = 10)
+meeting = Conversation(rounds = 15)
 
 # Set up Conversation class' System Message prefix text from a txt file.
 # This conditions each stakeholder on how to behave, regardless of role.
@@ -48,22 +53,23 @@ with open('assets/StakeholderSystemInstructions.txt', 'r') as file:
     with open('assets/StakeholderSystemCompany.txt', 'r') as file:
         meeting.company = file.read()
 
-    # create test stakeholders
-    priya   = Actor.from_persona_file('assets/Priya Singh CTO.txt')
-    takashi = Actor.from_persona_file('assets/Takashi Mitsui Product Manager.txt')   
-    alex    = Actor.from_persona_file('assets/Alexandra Taylor CFO.txt')   
+        # create test stakeholders
+        priya   = Actor.from_persona_file('assets/Priya Singh CTO.txt')
+        takashi = Actor.from_persona_file('assets/Takashi Mitsui Product Manager.txt')   
+        alex    = Actor.from_persona_file('assets/Alexandra Taylor CFO.txt')   
 
-    # Add the Actors to the meeting
-    meeting.add_stakeholder(priya)
-    meeting.add_stakeholder(takashi)
-    meeting.add_stakeholder(alex)
+        # Add the Actors to the meeting
+        meeting.add_stakeholder(priya)
+        meeting.add_stakeholder(takashi)
+        meeting.add_stakeholder(alex)
 
-    # start the conversation
-    # meeting.discuss_topic("Please brainstorm possible features for a new, AI-based sensor suite and patient monitoring solution. Fixed sensors, associated with the bed, would be paired with portable sensor(s) that a practitioner might wield. Please limit yourselves to a max of 55 words per utterance.")
-    meeting.discuss_topic("Brainstorm possible features for a new alpine survival system that we're thinking about. Please limit yourselves to a max of 60 words per utterance.")
+        # start the conversation
+        # meeting.discuss_topic("Please brainstorm possible features for a new, AI-based sensor suite and patient monitoring solution. Fixed sensors, associated with the bed, would be paired with portable sensor(s) that a practitioner might wield. Please limit yourselves to a max of 55 words per utterance.")
+        meeting.discuss_topic("Brainstorm possible features for a new alpine survival system that we're thinking about. Please limit yourselves to a max of 60 words per utterance.")
+ 
 
 
-
+ 
 
 
 

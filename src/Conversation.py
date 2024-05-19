@@ -9,9 +9,13 @@
 # 5/ Should messages[] be stored once in the Conversation class, as opposed to each Actor? ask RC
 # 6/ Monitor for "*Done*" messages in the conversation and terminate the topic early.
 
-
+# Python
 import random
 from typing import List
+
+# Anvil
+import anvil.server
+
 
 # import local classes
 from Actor import Actor
@@ -78,7 +82,7 @@ class Conversation:
         # Shuffle the list to ensure random order
         random.shuffle(remaining_actors)
 
-        # Iterate over the shuffled list and forward the the responses to all
+        # Iterate over the shuffled list
         while remaining_actors:
             # Remove the last actor from the list
             actor: Actor = remaining_actors.pop()
@@ -87,15 +91,21 @@ class Conversation:
 
             if '*Done*' in response:
                 print (f"**{actor.first_name}**: done\n\n")
-                break
+                continue
             elif '*Pass*' in response:
                 print (f"{actor.first_name}: pass\n\n")
                 continue
             else:
                 print (f'{response}\n\n')
                 self.broadcast_to_others(response, actor)
+        
+        # Allow the human facilitator to comment at the end of each round           
+        comment = input('Enter a comment: ')
 
+        if comment and (comment != 'pass'):
+            self.broadcast_to_others('Facilitator:' + comment, None)
 
+    
     # add a bot to the conversation
     def add_stakeholder(self, new_member: Actor) -> None:
         """
@@ -174,4 +184,5 @@ class Conversation:
         return self._stakeholders
 
 
-
+def anything_to_do() -> bool:
+    return True

@@ -42,7 +42,6 @@ class Actor:
 
 
     @classmethod
-
     def from_persona_file(cls, file_path: str) -> 'Actor':
         """
         Load a text-based persona file and create a corresponding Actor object
@@ -128,9 +127,9 @@ class Actor:
         if message:
             # append the user's message to the local conversation memory
             self._message_history.append(HumanMessage(content = message))
-        else:
+        # else:
             # use the last message in the local conversation memory as the prompt
-            message = self.last_response
+            # message = self.last_response
 
         # execute the LLM on the local message history
         if not self.__convo_bot:
@@ -156,6 +155,7 @@ class Actor:
         """
         self._message_history.append(self.system_message)
 
+    
     def hear(self, message: str) -> None:
         """
         Simulates "hearing" a message from another Actor
