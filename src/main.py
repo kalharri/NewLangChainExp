@@ -39,7 +39,7 @@ anvil_uplink_key = os.getenv('ANVIL_UPLINK_KEY')
 # anvil.server.connect(anvil_uplink_key)
 
 # Set up Actor class' required LLM instance for generating chatbot responses
-Actor.set_convo_bot(ChatOpenAI(model = 'gpt-4o', temperature = random.uniform(0.8, 1.2)))
+Actor.set_convo_bot(ChatOpenAI(model = 'gpt-4o', temperature = 0.9))
 
 # create a meeting
 meeting = Conversation(rounds = 15)

@@ -18,6 +18,10 @@ from langchain.prompts import PromptTemplate
 from langchain.prompts import MessagesPlaceholder
 from langchain.schema import (SystemMessage, HumanMessage, AIMessage)
 
+# local
+from prompt_templates import system_message_template, human_message_template, ai_message_template
+
+
 
 class Actor:
 
@@ -126,10 +130,8 @@ class Actor:
         """
         if message:
             # append the user's message to the local conversation memory
-            self._message_history.append(HumanMessage(content = message))
-        # else:
-            # use the last message in the local conversation memory as the prompt
-            # message = self.last_response
+            human_message = human_message_template.format(content=message)
+            self._message_history.append(HumanMessage(content=human_message))
 
         # execute the LLM on the local message history
         if not self.__convo_bot:
@@ -141,7 +143,8 @@ class Actor:
 
         if response and (not ('*Pass*' in response.content)):
             # append the LLM's response to the local conversation memory
-            self._message_history.append(HumanMessage(content = response.content)) # *** chg to HumanMessage + look for other cases
+            pseudo_human_message = human_message_template.format(content=response.content)
+            self._message_history.append(HumanMessage(content=pseudo_human_message))
             return response.content
         else:
             return self.first_name + ': *Pass*'
@@ -153,7 +156,12 @@ class Actor:
         Returns:
             None
         """
-        self._message_history.append(self.system_message)
+        system_message = system_message_template.format(
+            behavior = self._behavior,
+            company = self._company,
+            persona = self._persona
+    )
+        self._message_history.append(SystemMessage(content=system_message))
 
     
     def hear(self, message: str) -> None:
@@ -166,8 +174,11 @@ class Actor:
         Returns:
             None
         """        
-        self._message_history.append(HumanMessage(content = message))      # *** should this be a HumanMessage?
-    
+        human_message = human_message_template.format(content=message)
+        self._message_history.append(HumanMessage(content=human_message))   
+
+
+    # getters & setters
 
     @property
     def topic(self) -> str:
@@ -179,8 +190,6 @@ class Actor:
             self._topic = new_topic
             self._message_history.append(HumanMessage(content = new_topic))
         
-
-    # Getters & setters
 
     @property
     def full_name(self) -> str:
@@ -242,6 +251,8 @@ class Actor:
     def temperature(self, value: float) -> None:
         self._temperature = value
     
+
+    '''
     @property
     def system_message(self) -> SystemMessage:
         """
@@ -252,7 +263,8 @@ class Actor:
         return SystemMessage(
             content = self.behavior + '\n\n' + self.company + '\n\n' + self.persona
         )
-    
+    '''
+
 
     # Get the Actor's most recent prompt input 
     @property
