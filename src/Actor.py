@@ -1,6 +1,5 @@
 
-# The Actor class models a corporate character, suitable for design thinking sessions or other 
-# types of conversations in simulated workshops or meetings.
+# 
 # Bob Howard
 # kalharri@gmail.com
 
@@ -9,21 +8,30 @@
 # 1/ Choose and substitute appropriate Langchain agent for the Actor's LLM rather than the default ChatOpenAI model.
 
 
+# Standard library imports
 import os
+from typing import List, Optional
 
-# from langchain.llms import OpenAI
+# Third-party imports
 from langchain_openai import ChatOpenAI
-# from langchain.chat_models import ChatOpenAI
-from langchain.prompts import PromptTemplate
-from langchain.prompts import MessagesPlaceholder
-from langchain.schema import (SystemMessage, HumanMessage, AIMessage)
+from langchain.schema import SystemMessage, HumanMessage, AIMessage
 
-# local
+# Local application/library-specific imports
 from prompt_templates import system_message_template, human_message_template, ai_message_template
 
 
 
 class Actor:
+    """
+    The Actor class models a corporate character, suitable for design thinking sessions or other types of conversations in simulated workshops or meetings.
+
+    Attributes:
+        first_name (str): The first name of the actor.
+        last_name (str): The last name of the actor.
+        role (str): The corporate role of the actor.
+        persona (str): The instructions for the actor.
+        temperature (float): The temperature value for generating responses.
+    """
 
     # Class variables
     __convo_bot: ChatOpenAI = None          # app-provided LLM instance to conduct conversations with the personified Actor.
@@ -31,12 +39,11 @@ class Actor:
 
     # Class variable setters
     @classmethod
-    def set_convo_bot(cls, bot: ChatOpenAI):
+    def set_convo_bot(cls, bot: ChatOpenAI) -> None:
         """
         Set the conversation bot for the class.
 
         Args:
-            cls: The class itself.
             bot (ChatOpenAI): The conversation bot to set.
 
         Returns:
@@ -80,9 +87,10 @@ class Actor:
         Initializes an instance of the Actor class.
         
         Args:
-            name (str, optional): The name of the actor. Defaults to Unknown.
-            role (str, optional): The corporate role of the actor. Defaults to "You are a helpful, corporate assistant.".
-            persona (str, optional): The instructions for the actor. Defaults to Unknown.
+            first_name (str, optional): The first name of the actor. Defaults to 'Unknown'.
+            last_name (str, optional): The last name of the actor. Defaults to 'Unknown'.
+            role (str, optional): The corporate role of the actor. Defaults to 'Unknown'.
+            persona (str, optional): The instructions for the actor. Defaults to "You are a helpful, corporate assistant.".
             temperature (float, optional): The temperature value for generating responses. Defaults to 0.9.
             
         Returns:
@@ -115,12 +123,9 @@ class Actor:
         return str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' + str(self.__dict__[item]) for item in self.__dict__))
     
 
-    def invoke(self, message: str = None) -> str:
+    def invoke(self, message: Optional[str] = None) -> str:
         """
         Calls the cached chat model with a user message and returns the chatbot's response.
-        Allows constructions like:
-            maggie = Actor(first_name = "Maggie", temperature=1.6)
-            response = maggie.invoke("What's your name?")
 
         Args:
             message (str): The user message to be passed to the chatbot. If None, the last "heard" message will process
@@ -130,12 +135,11 @@ class Actor:
         """
         if message:
             # append the user's message to the local conversation memory
-            human_message = human_message_template.format(content=message)
-            self._message_history.append(HumanMessage(content=human_message))
+            self._append_message('human', message)
 
         # execute the LLM on the local message history
         if not self.__convo_bot:
-            raise Exception('no language model found!')
+            raise Exception('No language model instance found! Please set the conversation bot using Actor.set_convo_bot() before invoking.')
 
         # invoke the model
         self.__convo_bot.temperature = self._temperature
@@ -143,25 +147,20 @@ class Actor:
 
         if response and (not ('*Pass*' in response.content)):
             # append the LLM's response to the local conversation memory
-            pseudo_human_message = human_message_template.format(content=response.content)
-            self._message_history.append(HumanMessage(content=pseudo_human_message))
+            self._append_message('human', response.content)
             return response.content
         else:
             return self.first_name + ': *Pass*'
 
+
     def create_system_message(self) -> None:
         """
-        Creates the system message based on the Actor's persona.
+        Creates the system message based on the Actor's persona and appends it to the message history
 
         Returns:
             None
         """
-        system_message = system_message_template.format(
-            behavior = self._behavior,
-            company = self._company,
-            persona = self._persona
-    )
-        self._message_history.append(SystemMessage(content=system_message))
+        self._append_message('system')
 
     
     def hear(self, message: str) -> None:
@@ -169,108 +168,217 @@ class Actor:
         Simulates "hearing" a message from another Actor
         
         Args:
-            message (str): The message content to be recorded.
+            message (str): The message content to be 'heard' by the Actor
 
         Returns:
             None
         """        
-        human_message = human_message_template.format(content=message)
-        self._message_history.append(HumanMessage(content=human_message))   
+        self._append_message('human', message)
 
+
+    def _append_message(self, message_type: str, content: Optional[str] = '') -> None:
+        """
+        Helper method to format and append messages to the message history.
+
+        Args:
+            message_type (str): The type of the message ('human', 'ai', or 'system').
+            content (Optional[str]): The content of the message.
+        """
+        if message_type == 'human':
+            formatted_message = human_message_template.format(content=content)
+            self._message_history.append(HumanMessage(content=formatted_message))
+        elif message_type == 'ai':
+            formatted_message = ai_message_template.format(response=content)
+            self._message_history.append(AIMessage(content=formatted_message))
+        elif message_type == 'system':
+            formatted_message = system_message_template.format(
+                behavior=self._behavior,
+                company=self._company,
+                persona=self._persona
+            )
+            self._message_history.append(SystemMessage(content=formatted_message))
+            
 
     # getters & setters
 
     @property
     def topic(self) -> str:
+        """
+        Gets the current topic.
+
+        Returns:
+            str: The current topic.
+        """
         return self._topic
     
     @topic.setter
     def topic(self, new_topic: str) -> None:
+        """
+        Sets a new topic and appends it to the message history.
+
+        Args:
+            new_topic (str): The new topic to be set.
+        """
         if new_topic:
             self._topic = new_topic
             self._message_history.append(HumanMessage(content = new_topic))
         
-
     @property
     def full_name(self) -> str:
+        """
+        Gets the full name of the actor.
+
+        Returns:
+            str: The full name of the actor.
+        """
         return self._first_name + ' ' + self._last_name
 
     @property
     def first_name(self) -> str:
+        """
+        Gets the first name of the actor.
+
+        Returns:
+            str: The first name of the actor.
+        """
         return self._first_name
 
     @first_name.setter
     def first_name(self, value: str) -> None:
+        """
+        Sets the first name of the actor.
+
+        Args:
+            value (str): The new first name to be set.
+        """
+        self._first_name = value
         self._first_name = value
 
     @property
     def last_name(self) -> str:
+        """
+        Gets the last name of the actor.
+
+        Returns:
+            str: The last name of the actor.
+        """
         return self._last_name
 
     @last_name.setter
     def last_name(self, value: str) -> None:
+        """
+        Sets the last name of the actor.
+
+        Args:
+            value (str): The new last name to be set.
+        """
         self._last_name = value
 
     @property
     def role(self) -> str:
+        """
+        Gets the role of the actor.
+
+        Returns:
+            str: The role of the actor.
+        """
         return self._role
 
     @role.setter
     def role(self, value: str) -> None:
+        """
+        Sets the role of the actor.
+
+        Args:
+            value (str): The new role to be set.
+        """
         self._role = value
 
     @property
     def behavior(self) -> str:
+        """
+        Gets the behavior of the actor.
+
+        Returns:
+            str: The behavior of the actor.
+        """
         return self._behavior
 
     @behavior.setter
     def behavior(self, value: str) -> None:
+        """
+        Sets the behavior of the actor.
+
+        Args:
+            value (str): The new behavior to be set.
+        """
         self._behavior = value
     
     @property
     def company(self) -> str:
+        """
+        Gets the company of the actor.
+
+        Returns:
+            str: The company of the actor.
+        """
         return self._company
 
     @company.setter
     def company(self, value: str) -> None:
+        """
+        Sets the company of the actor.
+
+        Args:
+            value (str): The new company to be set.
+        """
         self._company = value
     
     @property
     def persona(self) -> str:
+        """
+        Gets the persona of the actor.
+
+        Returns:
+            str: The persona of the actor.
+        """
         return self._persona
 
     @persona.setter
     def persona(self, value: str) -> None:
+        """
+        Sets the persona of the actor.
+
+        Args:
+            value (str): The new persona to be set.
+        """
         self._persona = value
     
     @property
     def temperature(self) -> float:
+        """
+        Gets the temperature for generating responses.
+
+        Returns:
+            float: The temperature for generating responses.
+        """
         return self._temperature
 
     @temperature.setter
     def temperature(self, value: float) -> None:
+        """
+        Sets the temperature for generating responses.
+
+        Args:
+            value (float): The new temperature to be set.
+        """
         self._temperature = value
     
-
-    '''
-    @property
-    def system_message(self) -> SystemMessage:
-        """
-        Property function to get the system message.
-        Returns:
-            SystemMessage: The system message object with the Instructions, Company and persona.
-        """
-        return SystemMessage(
-            content = self.behavior + '\n\n' + self.company + '\n\n' + self.persona
-        )
-    '''
-
-
     # Get the Actor's most recent prompt input 
     @property
     def last_prompt(self) ->str:
         """
-        Returns what the Actor last responded to.
+        Gets the most recent prompt input.
 
         Returns:
             str: The content of the second to last message.
@@ -284,7 +392,7 @@ class Actor:
     @property
     def last_response(self) ->str:
         """
-        Returns the Actor's last response from the messages context.
+        Gets the last response from the messages context.
 
         Returns:
             str: The content of the last message in memory.
