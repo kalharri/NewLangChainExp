@@ -39,7 +39,7 @@ anvil_uplink_key = os.getenv('ANVIL_UPLINK_KEY')
 # anvil.server.connect(anvil_uplink_key)
 
 # Set up Actor class' required LLM instance for generating chatbot responses
-Actor.set_convo_bot(ChatOpenAI(model = 'gpt-4o', temperature = 0.9))
+Actor.set_convo_bot(ChatOpenAI(model = 'gpt-4o', temperature = 0.65))
 
 # create a meeting
 meeting = Conversation(rounds = 15)
@@ -56,21 +56,26 @@ with open('assets/StakeholderSystemInstructions.txt', 'r') as file:
         # create test stakeholders
         priya   = Actor.from_persona_file('assets/Priya Singh CTO.txt')
         takashi = Actor.from_persona_file('assets/Takashi Mitsui Product Manager.txt')   
-        alex    = Actor.from_persona_file('assets/Alexandra Taylor CFO.txt')   
+        alex    = Actor.from_persona_file('assets/Alexandra Taylor CFO.txt')
+        dimitri = Actor.from_persona_file('assets/Dimitri Petrov Senior VP Marketing.txt') 
+
+        # Assign skillsets
+        priya.skillset = "Wilderness Survival"
+        takashi.skillset = "Alpine Hiking & Camping"
+        alex.skillset = "Medical Emergency Response"
 
         # Add the Actors to the meeting
         meeting.add_stakeholder(priya)
         meeting.add_stakeholder(takashi)
         meeting.add_stakeholder(alex)
+        meeting.add_stakeholder(dimitri)
 
         # start the conversation
         # meeting.discuss_topic("Please brainstorm possible features for a new, AI-based sensor suite and patient monitoring solution. Fixed sensors, associated with the bed, would be paired with portable sensor(s) that a practitioner might wield. Please limit yourselves to a max of 55 words per utterance.")
-        meeting.discuss_topic("Brainstorm possible features for a new alpine survival system that we're thinking about. Please limit yourselves to a max of 60 words per utterance.")
+        # meeting.discuss_topic("Brainstorm possible features for a new alpine survival system that we're thinking about. First, define the product's goals and converge on an easily-articulable set. Next, define the audience for the initial release. When you agree on audience, you can brainstorm the product features. Please limit yourselves to a max of 75 words per utterance.")
  
 
+        meeting.discuss_topic("You are participating in a strategic workshop to brainstorm possible features for a new alpine survival system. During the brainstorming phase, focus on generating as many ideas as possible without criticism. Once you feel that the brainstorming phase is complete, shift to critically evaluating the ideas. Question the feasibility, practicality, and potential impact of the suggestions. Aim to refine and improve each idea through constructive criticism. Please limit yourselves to a max of 100 words per utterance, not including the emotes you have generated.")
+    
 
- 
-
-
-
-
+        # ****** above is seed of a Workshop class ******

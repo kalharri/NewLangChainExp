@@ -82,7 +82,7 @@ class Actor:
             return instance
 
 
-    def __init__(self, first_name: str = 'Unknown', last_name: str = 'Unknown', role: str = 'Unknown', persona: str = "You are a helpful, corporate assistant.", temperature: float = 0.9) -> None:
+    def __init__(self, first_name: str = 'Unknown', last_name: str = 'Unknown', role: str = 'Unknown', persona: str = "You are a helpful assistant.", temperature: float = 0.65, skillset: str = "") -> None:
         """
         Initializes an instance of the Actor class.
         
@@ -110,6 +110,11 @@ class Actor:
 
         self._behavior: str = None
         self._company: str = None
+        self._skillset: str = skillset
+
+        if skillset:
+            detailed_skillset = self.expand_skillset(skillset)
+            # print(f"**{self._first_name}**: {detailed_skillset}\n\n")
  
 
     # override the dunder method to format an instance of this class as a string
@@ -121,7 +126,25 @@ class Actor:
             str: The string representation of the object.
         """
         return str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' + str(self.__dict__[item]) for item in self.__dict__))
-    
+
+
+    def expand_skillset(self, skillset: str) -> str:
+        """
+        Expands a given skillset into a detailed description using the embedded language model.
+
+        Args:
+            skillset (str): The name of the skillset to be expanded (e.g., "Alpine Hiking & Camping").
+
+        Returns:
+            str: A detailed description of the skillset.
+        """
+        base_prompt = f"Describe the following skillset in detail: {skillset}"
+        self.__convo_bot.temperature = 0.65
+        response = self.__convo_bot.invoke(base_prompt)
+        self._persona += f"\n\nExtra Skillset: {response}"
+
+        return response
+
 
     def invoke(self, message: Optional[str] = None) -> str:
         """
@@ -201,6 +224,28 @@ class Actor:
 
     # getters & setters
 
+    @property
+    def skillset(self) -> str:
+        """
+        Gets the skillset of the actor.
+
+        Returns:
+            str: The skillset of the actor.
+        """
+        return self._skillset
+
+    @skillset.setter
+    def skillset(self, value: str) -> None:
+        """
+        Sets the skillset of the actor and expands it into a detailed description.
+
+        Args:
+            value (str): The name of the skillset to be set and expanded.
+        """
+        self._skillset = value
+        detailed_skillset = self.expand_skillset(value)
+        # print(f'{self.first_name} {self.last_name} has learned about: {detailed_skillset}')
+    
     @property
     def topic(self) -> str:
         """

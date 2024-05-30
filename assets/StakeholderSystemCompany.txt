@@ -1,5 +1,3 @@
-COMPANY
-
 Overview
 Name: PeakElement Outdoors
 Industry: Outdoor Recreation and Equipment
